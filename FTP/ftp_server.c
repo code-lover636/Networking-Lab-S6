@@ -38,7 +38,7 @@ int main() {
     socklen_t addr_len = sizeof(client_addr);
 
     server_socket = socket(AF_INET, SOCK_STREAM, 0);
-    if (server_socket == 0)
+    if (server_socket < 0)
     {
         perror("Socket failed");
         exit(EXIT_FAILURE);

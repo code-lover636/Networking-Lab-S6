@@ -5,7 +5,7 @@
 
 int main() {
 
-    int packet = 1, ack_received;
+    int packet = 1;
 
     while (packet <= 5) {
         printf("Sender: Sending packet %d...\n", packet);

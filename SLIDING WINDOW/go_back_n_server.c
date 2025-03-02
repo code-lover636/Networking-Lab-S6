@@ -4,7 +4,7 @@
 #include <unistd.h>
 #include <arpa/inet.h>
 
-#define PORT 8080
+#define PORT 8095
 #define BUFFER_SIZE 1024
 #define LOSS_PROBABILITY 30  // 30% chance of ACK loss
 
@@ -23,7 +23,10 @@ int main() {
     address.sin_port = htons(PORT);
 
     // Bind socket
-    bind(server_fd, (struct sockaddr *)&address, sizeof(address));
+    if(bind(server_fd, (struct sockaddr *)&address, sizeof(address)) < 0){
+        perror("Cannot bind");
+        return 0;
+    }
 
     // Listen for client
     listen(server_fd, 3);

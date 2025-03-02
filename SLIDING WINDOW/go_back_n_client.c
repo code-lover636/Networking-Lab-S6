@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <sys/time.h>
 
-#define PORT 8080
+#define PORT 8095
 #define BUFFER_SIZE 1024
 #define TIMEOUT 3  // Timeout in seconds
 #define WINDOW_SIZE 4  // Sliding window size
