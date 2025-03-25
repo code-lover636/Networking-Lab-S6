@@ -59,3 +59,56 @@ int main() {
     close(server_fd);
     return 0;
 }
+
+/* 
+
+1. START  
+
+2. Initialize variables  
+   2.1. Declare server_fd, new_socket, address, addrlen, buffer, and ack.  
+   2.2. Set BUFFER_SIZE to 1024 and PORT to 8095.  
+   2.3. Set LOSS_PROBABILITY to 30 (30% chance of ACK loss).  
+
+3. Create a socket  
+   3.1. Call socket(AF_INET, SOCK_STREAM, 0) to create a TCP socket.  
+   3.2. Assign address.sin_family = AF_INET.  
+   3.3. Set address.sin_addr.s_addr = INADDR_ANY (accept connections from any address).  
+   3.4. Set address.sin_port = htons(PORT) to bind the socket to the given port.  
+
+4. Bind the socket  
+   4.1. Call bind(server_fd, (struct sockaddr *)&address, sizeof(address)).  
+   4.2. If binding fails, print "Cannot bind" and exit.  
+
+5. Listen for incoming client connections  
+   5.1. Call listen(server_fd, 3).  
+   5.2. Print "Server: Waiting for connection...".  
+
+6. Accept a client connection  
+   6.1. Call accept(server_fd, (struct sockaddr *)&address, (socklen_t*)&addrlen).  
+   6.2. Print "Server: Connection established.".  
+
+7. Process incoming packets in a loop  
+   7.1. Loop until the connection is closed  
+       7.1.1. Clear buffer using memset(buffer, 0, BUFFER_SIZE).  
+       7.1.2. Read data from new_socket into buffer.  
+       7.1.3. If valread == 0, break the loop (client disconnected).  
+       7.1.4. Convert received buffer to an integer and store in ack.  
+       7.1.5. Print "Server: Received packet <ack>".  
+
+8. Simulate ACK loss  
+   8.1. Generate a random number from 0 to 99 using rand() % 100.  
+   8.2. If the random number is less than LOSS_PROBABILITY  
+       8.2.1. Print "Server: ACK for packet <ack> lost!".  
+   8.3. Else (ACK is sent successfully)  
+       8.3.1. Introduce a 1-second processing delay using sleep(1).  
+       8.3.2. Print "Server: ACK sent for packet <ack>".  
+       8.3.3. Convert ack to a string and store it in buffer.  
+       8.3.4. Send buffer to new_socket using send().  
+
+9. Close connections  
+   9.1. Close new_socket.  
+   9.2. Close server_fd.  
+
+10. STOP
+
+*/
