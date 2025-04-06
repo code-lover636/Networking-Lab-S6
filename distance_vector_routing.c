@@ -1,5 +1,4 @@
 #include <stdio.h>
-#define INFINITY 9999
 #define MAX 10
 
 int cost[MAX][MAX], dist[MAX][MAX], next_hop[MAX][MAX];

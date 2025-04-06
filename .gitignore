@@ -5,5 +5,8 @@ a.out
 **/client
 **/server
 
+**/*.tr
+**/*.nam
 
 ./algorithm.txt
+/TEST

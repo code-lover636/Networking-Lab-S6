@@ -2,68 +2,66 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
-#include <arpa/inet.h>
 #include <sys/time.h>
+#include <arpa/inet.h>
+#include <time.h>
 
-#define PORT 8095
-#define BUFFER_SIZE 1024
-#define TIMEOUT 3  // Timeout in seconds
-#define WINDOW_SIZE 4  // Sliding window size
-#define TOTAL_PACKETS 10  // Number of packets to send
+#define PORT 8087
+#define NUM_PACKETS 10
+#define WINDOW 5
+#define LOSS_PROBABILITY 50
 
 int main() {
-    struct sockaddr_in serv_addr;
-    char buffer[BUFFER_SIZE] = {0};
+    struct sockaddr_in server_address;
+    char buffer[40];
+    int base = 0, next_seq_num = 0;
+
+    srand(time(NULL));
+
+    int clientfd = socket(AF_INET, SOCK_STREAM, 0);
+
+    server_address.sin_family = AF_INET;
+    server_address.sin_port = htons(PORT);
+    server_address.sin_addr.s_addr = inet_addr("127.0.0.1");
+
+    connect(clientfd, (struct sockaddr *)&server_address, sizeof(server_address));
+
     struct timeval tv;
-
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
-
-    serv_addr.sin_family = AF_INET;
-    serv_addr.sin_port = htons(PORT);
-
-    inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr);
-
-    connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr));
-    printf("Client: Connected to server.\n");
-
-    tv.tv_sec = TIMEOUT;
+    tv.tv_sec = 3;
     tv.tv_usec = 0;
-    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof(tv));
+    setsockopt(clientfd, SOL_SOCKET, SO_RCVTIMEO, (const char *)&tv, sizeof(tv));
 
-    int base = 1;
-    int next_to_send = 1;
-    int ack, packets_acked = 0;
+    while (base < NUM_PACKETS) {
+        // Send all packets in the window
+        for (int i = base; i < NUM_PACKETS && i < base + WINDOW; i++) {
+            memset(buffer, 0, sizeof(buffer));
+            sprintf(buffer, "%d", i);
 
-    while (packets_acked < TOTAL_PACKETS) {
-
-        while (next_to_send < base + WINDOW_SIZE && next_to_send <= TOTAL_PACKETS) {
-            memset(buffer,0,BUFFER_SIZE);
-            printf("Client: Sending packet %d\n", next_to_send);
-            sprintf(buffer, "%d", next_to_send);
-            send(sock, buffer, strlen(buffer)+1, 0);
-            next_to_send++;
-      }
-
-        // Wait for ACK
-        memset(buffer, 0, BUFFER_SIZE);
-        int valread = read(sock, buffer, BUFFER_SIZE);
-
-        if (valread > 0) {
-            ack = atoi(buffer);
-            printf("Client: ACK received for packet %d\n", ack);
-            
-            // Slide the window if ACK corresponds to the base
-            if (ack == base) {
-                base = ack + 1;
-                packets_acked = ack;
+            if (rand() % 100 >= LOSS_PROBABILITY) {
+                printf("Sending packet %d\n", i);
+                send(clientfd, buffer, sizeof(buffer), 0);
+            } else {
+                printf("Packet %d lost during send\n", i);
             }
+        }
+
+        // Wait for ACK of base
+        memset(buffer, 0, sizeof(buffer));
+        int bytes = read(clientfd, buffer, sizeof(buffer));
+        if (bytes <= 0) {
+            printf("Timeout: ACK for packet %d not received. Resending window...\n", base);
+            // Go back and resend all packets from base in next iteration
         } else {
-            printf("Client: Timeout! Retransmitting from packet %d...\n", base);
-            next_to_send = base;  // Reset next_to_send to base for retransmission
+            int ack = atoi(buffer);
+            if (ack == base) {
+                printf("Acknowledgement %d received\n", ack);
+                base++;
+            } else {
+                printf("Out-of-order ACK %d received (ignored in GBN)\n", ack);
+            }
         }
     }
 
-    printf("Client: All packets sent successfully.\n");
-    close(sock);
+    close(clientfd);
     return 0;
 }

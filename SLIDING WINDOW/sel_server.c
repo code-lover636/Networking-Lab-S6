@@ -5,7 +5,7 @@
 #include <arpa/inet.h>
 #include <time.h>
 
-#define PORT 8087
+#define PORT 8086
 #define LOSS_PROBABILITY 30
 
 int main() {
